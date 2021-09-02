@@ -1,5 +1,7 @@
 import cv2
 import HandTrackingModule as htm
+import drag_rect as dr
+import cvzone
 
 cap = cv2.VideoCapture(0)
 cap.set(3, 1280)
@@ -8,7 +10,11 @@ cap.set(4, 720)
 detector = htm.HandDetector(detectionCon=0.8)
 
 colorRect = (255, 0, 255)
-cx, cy, w, h = 100, 100, 200, 200
+
+rectList = []
+
+for i in range(5):
+    rectList.append(dr.DragRect([i*250+150, 150]))
 
 while True:
     _, img = cap.read()
@@ -20,14 +26,15 @@ while True:
         l, _, _ = detector.findDistance(8, 12, img)
         if l < 30:
             cursor = lmList[8]
-            if cx-w//2 < cursor[0] < cy+h//2 and cx-h//2 < cursor[1] < cy+h//2:
-                colorRect = 0, 255, 0
+            for rect in rectList:
+                rect.update(cursor)
 
-                cx, cy = cursor
-            else:
-                colorRect = (255, 0, 255)
+    for rect in rectList:
+        cx, cy = rect.posCenter
+        w, h = rect.size
 
-    cv2.rectangle(img, (cx-w//2, cy-h//2), (cx+w//2, cy+h//2), colorRect, cv2.FILLED)
+        cv2.rectangle(img, (cx-w//2, cy-h//2), (cx+w//2, cy+h//2), colorRect, cv2.FILLED)
+        cvzone.cornerRect(img, (cx-w//2, cy-h//2, w, h), 20, rt=0)
 
     cv2.imshow("JAK Virtual Drag and Drop Prog", img)
     cv2.waitKey(1)
