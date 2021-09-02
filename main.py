@@ -2,6 +2,7 @@ import cv2
 import HandTrackingModule as htm
 import drag_rect as dr
 import cvzone
+import numpy as np
 
 cap = cv2.VideoCapture(0)
 cap.set(3, 1280)
@@ -29,12 +30,18 @@ while True:
             for rect in rectList:
                 rect.update(cursor)
 
+    imgNew = np.zeros_like(img, np.uint8)
     for rect in rectList:
         cx, cy = rect.posCenter
         w, h = rect.size
 
-        cv2.rectangle(img, (cx-w//2, cy-h//2), (cx+w//2, cy+h//2), colorRect, cv2.FILLED)
-        cvzone.cornerRect(img, (cx-w//2, cy-h//2, w, h), 20, rt=0)
+        cv2.rectangle(imgNew, (cx-w//2, cy-h//2), (cx+w//2, cy+h//2), colorRect, cv2.FILLED)
+        cvzone.cornerRect(imgNew, (cx-w//2, cy-h//2, w, h), 20, rt=0)
 
-    cv2.imshow("JAK Virtual Drag and Drop Prog", img)
+    out = img.copy()
+    alpha = 0.5
+    mask = imgNew.astype(bool)
+    out[mask] = cv2.addWeighted(img, alpha, imgNew, 1 - alpha, 0)[mask]
+
+    cv2.imshow("JAK Virtual Drag and Drop Prog", out)
     cv2.waitKey(1)
